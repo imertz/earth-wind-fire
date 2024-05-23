@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      Rotating Red Tetrahedron and Hexahedron with Blue Octahedron Inside in
+      WebGL
+    </title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.145.0/build/three.min.js"></script>
+    <script>
+      // Set up the scene, camera, and renderer.
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x000000);
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Raycaster for mouse interaction
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+      let intersectedObjects = [];
+
+      // Add ambient and directional light
+      const ambientLight = new THREE.AmbientLight(0x444444);
+      scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(5, 5, 5).normalize();
+      scene.add(directionalLight);
+
+      // Load textures
+      const textureLoader = new THREE.TextureLoader();
+      const tetrahedronTexture = textureLoader.load(
+        "https://cdn.mos.cms.futurecdn.net/j2Vj6UiuDCMqqRt75htuHm-1200-80.jpg"
+      );
+      const hexahedronTexture = textureLoader.load(
+        "https://threejsfundamentals.org/threejs/resources/images/wall.jpg"
+      );
+
+      // Create a tetrahedron with red color
+      const tetrahedronGeometry = new THREE.TetrahedronGeometry(0.7);
+      const tetrahedronMaterial = new THREE.MeshPhongMaterial({
+        // fire color
+        color: 0xff0000,
+        transparent: true,
+        opacity: 0.9,
+      });
+      const tetrahedron = new THREE.Mesh(
+        tetrahedronGeometry,
+        tetrahedronMaterial
+      );
+      tetrahedron.position.z = -0.9;
+      tetrahedron.position.y = -1.5;
+
+      scene.add(tetrahedron);
+
+      // Create a hexahedron (cube) with red color
+      const hexahedronGeometry = new THREE.BoxGeometry(0.9, 0.9, 0.9);
+      const hexahedronMaterial = new THREE.MeshPhongMaterial({
+        // color earth green
+        color: 0x008000,
+        transparent: true,
+        opacity: 0.9,
+      });
+      const hexahedron = new THREE.Mesh(hexahedronGeometry, hexahedronMaterial);
+      hexahedron.position.z = -0.9;
+      hexahedron.position.y = 1.5;
+      scene.add(hexahedron);
+
+      // Create an octahedron with blue color
+      const octahedronGeometry = new THREE.OctahedronGeometry(0.7);
+      const octahedronMaterial = new THREE.MeshPhongMaterial({
+        color: 0x87ceeb,
+        transparent: true,
+        opacity: 0.7,
+      });
+      const octahedron = new THREE.Mesh(octahedronGeometry, octahedronMaterial);
+      octahedron.position.z = -0.9;
+      octahedron.position.y = 0;
+      scene.add(octahedron);
+
+      // Wireframe materials
+      const wireframeMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        wireframe: true,
+      });
+
+      // Add fog
+      scene.fog = new THREE.FogExp2(0xffffff, 0.01);
+
+      // Position camera
+      camera.position.z = 5;
+
+      // Handle mouse move
+      function onMouseMove(event) {
+        event.preventDefault();
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      }
+
+      // Handle mouse click
+      function onClick(event) {
+        checkIntersect(); // Check and handle object interaction on click
+      }
+
+      function checkIntersect() {
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects([
+          tetrahedron,
+          hexahedron,
+          octahedron,
+        ]);
+        if (intersects.length > 0) {
+          const object = intersects[0].object;
+          object.material = wireframeMaterial;
+          intersectedObjects.push(object);
+        } else {
+          intersectedObjects.forEach((obj) => {
+            if (obj === tetrahedron) {
+              obj.material = tetrahedronMaterial;
+            } else if (obj === hexahedron) {
+              obj.material = hexahedronMaterial;
+            } else if (obj === octahedron) {
+              obj.material = octahedronMaterial;
+            }
+          });
+          intersectedObjects = [];
+        }
+      }
+
+      // Animation function
+      function animate() {
+        requestAnimationFrame(animate);
+        tetrahedron.rotation.y += 0.02;
+        tetrahedron.rotation.x += 0.01;
+        hexahedron.rotation.y += 0.02;
+        hexahedron.rotation.x += 0.01;
+        octahedron.rotation.y += 0.02;
+        octahedron.rotation.x += 0.01;
+        renderer.render(scene, camera);
+      }
+
+      // Start animation and add event listeners
+      animate();
+      window.addEventListener("mousemove", onMouseMove, false);
+      window.addEventListener("click", onClick, false);
+    </script>
+  </body>
+</html>
